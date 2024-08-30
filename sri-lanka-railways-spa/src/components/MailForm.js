@@ -1,17 +1,28 @@
 // src/components/MailForm.js
 import React, { useState } from 'react';
 import axios from 'axios';
-import MailMap from './MailMap';  // Import a new component to display the map
+import MailMap from './MailMap';  // Import the map component
+import {
+    Container,
+    Typography,
+    TextField,
+    Button,
+    Box,
+    Grid,
+    Alert,
+    Paper
+} from '@mui/material';
 
 const MailForm = () => {
     const [mailData, setMailData] = useState({
-        name: '',         // Add a name field
+        name: '',
         train_id: '',
         destination: ''
     });
     const [mailId, setMailId] = useState(null);
-    const [enteredMailId, setEnteredMailId] = useState('');  // State to hold the entered mail_id
-    const [mailLocation, setMailLocation] = useState(null);  // State to hold the location data
+    const [enteredMailId, setEnteredMailId] = useState('');
+    const [mailLocation, setMailLocation] = useState(null);
+    const [error, setError] = useState('');
 
     const handleChange = (e) => {
         setMailData({
@@ -26,87 +37,118 @@ const MailForm = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setError('');
         try {
             const response = await axios.post('http://localhost:3001/api/v1/mails', mailData);
-            setMailId(response.data.data.mail_id);  // Extract and set the mail_id from the response
+            setMailId(response.data.data.mail_id);
         } catch (error) {
             console.error('Error submitting mail data:', error);
+            setError('Failed to submit mail data. Please try again.');
         }
     };
 
     const handleMailIdSubmit = async (e) => {
         e.preventDefault();
+        setError('');
         try {
             const response = await axios.get(`http://localhost:3001/api/v1/mails/${enteredMailId}`);
-            setMailLocation(response.data.trainLocation);  // Extract and set the location data
+            setMailLocation(response.data.trainLocation);
         } catch (error) {
             console.error('Error fetching mail location:', error);
+            setError('Failed to fetch mail location. Please check the Mail ID.');
         }
     };
 
     return (
-        <div>
-            <h2>Enter Mail Details</h2>
-            <form onSubmit={handleSubmit}>
-                <div>
-                    <label>Name:</label>
-                    <input
-                        type="text"
+        <Container maxWidth="sm">
+            <Paper elevation={3} style={{ padding: '20px', marginTop: '20px' }}>
+                <Typography variant="h5" align="center" gutterBottom>
+                    Enter Mail Details
+                </Typography>
+                <Box component="form" onSubmit={handleSubmit} noValidate autoComplete="off">
+                    <TextField
+                        fullWidth
+                        label="Name"
+                        variant="outlined"
                         name="name"
                         value={mailData.name}
                         onChange={handleChange}
+                        margin="normal"
                         required
                     />
-                </div>
-                <div>
-                    <label>Train ID:</label>
-                    <input
-                        type="text"
+                    <TextField
+                        fullWidth
+                        label="Train ID"
+                        variant="outlined"
                         name="train_id"
                         value={mailData.train_id}
                         onChange={handleChange}
+                        margin="normal"
                         required
                     />
-                </div>
-                <div>
-                    <label>Destination:</label>
-                    <input
-                        type="text"
+                    <TextField
+                        fullWidth
+                        label="Destination"
+                        variant="outlined"
                         name="destination"
                         value={mailData.destination}
                         onChange={handleChange}
+                        margin="normal"
                         required
                     />
-                </div>
-                <button type="submit">Submit</button>
-            </form>
-            {mailId && (
-                <div>
-                    <h3>Your Mail ID is: {mailId}</h3>
-                    <p>You can use this ID to track the mail's location.</p>
-                </div>
-            )}
+                    <Box mt={2}>
+                        <Button variant="contained" color="primary" fullWidth type="submit">
+                            Submit
+                        </Button>
+                    </Box>
+                </Box>
 
-            {mailId && (
-                <div>
-                    <h2>Track Mail Location</h2>
-                    <form onSubmit={handleMailIdSubmit}>
-                        <input
-                            type="text"
-                            placeholder="Enter Mail ID"
+                {mailId && (
+                    <Box mt={4}>
+                        <Typography variant="h6" align="center">
+                            Your Mail ID is: {mailId}
+                        </Typography>
+                        <Typography align="center">
+                            You can use this ID to track the mail's location.
+                        </Typography>
+                    </Box>
+                )}
+
+                {mailId && (
+                    <Box mt={4} component="form" onSubmit={handleMailIdSubmit} noValidate autoComplete="off">
+                        <Typography variant="h6" align="center" gutterBottom>
+                            Track Mail Location
+                        </Typography>
+                        <TextField
+                            fullWidth
+                            label="Enter Mail ID"
+                            variant="outlined"
                             value={enteredMailId}
                             onChange={handleMailIdChange}
+                            margin="normal"
                             required
                         />
-                        <button type="submit">Track Mail</button>
-                    </form>
-                </div>
-            )}
+                        <Box mt={2}>
+                            <Button variant="contained" color="secondary" fullWidth type="submit">
+                                Track Mail
+                            </Button>
+                        </Box>
+                    </Box>
+                )}
+
+                {error && (
+                    <Box mt={2}>
+                        <Alert severity="error">{error}</Alert>
+                    </Box>
+                )}
+            </Paper>
 
             {mailLocation && (
-                <MailMap location={mailLocation} />
+                <Box mt={4}>
+                    <MailMap location={mailLocation} />
+                </Box>
             )}
-        </div>
+        </Container>
     );
 };
 
